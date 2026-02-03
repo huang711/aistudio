@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.AiModelPricingMapper">
+    
+    <resultMap type="AiModelPricing" id="AiModelPricingResult">
+        <result property="id"    column="id"    />
+        <result property="displayName"    column="display_name"    />
+        <result property="modelCode"    column="model_code"    />
+        <result property="type"    column="type"    />
+        <result property="provider"    column="provider"    />
+        <result property="apiEndpoint"    column="api_endpoint"    />
+        <result property="accessKeyId"    column="access_key_id"    />
+        <result property="secretAccessKey"    column="secret_access_key"    />
+        <result property="extraConfig"    column="extra_config"    />
+        <result property="billingMode"    column="billing_mode"    />
+        <result property="pointsPerReq"    column="points_per_req"    />
+        <result property="pointsPer1kTokens"    column="points_per_1k_tokens"    />
+        <result property="pointsPerSecond"    column="points_per_second"    />
+        <result property="costPerReqCny"    column="cost_per_req_cny"    />
+        <result property="costPer1kCny"    column="cost_per_1k_cny"    />
+        <result property="costPerSecondCny"    column="cost_per_second_cny"    />
+        <result property="isActive"    column="is_active"    />
+        <result property="sortOrder"    column="sort_order"    />
+        <result property="createTime"    column="create_time"    />
+    </resultMap>
+
+    <sql id="selectAiModelPricingVo">
+        select id, display_name, model_code, type, provider, api_endpoint, access_key_id, secret_access_key, extra_config, billing_mode, points_per_req, points_per_1k_tokens, points_per_second, cost_per_req_cny, cost_per_1k_cny, cost_per_second_cny, is_active, sort_order, create_time from sys_ai_models_pricing
+    </sql>
+
+    <select id="selectAiModelPricingList" parameterType="AiModelPricing" resultMap="AiModelPricingResult">
+        <include refid="selectAiModelPricingVo"/>
+        <where>  
+            <if test="displayName != null  and displayName != ''"> and display_name like concat('%', #{displayName}, '%')</if>
+            <if test="modelCode != null  and modelCode != ''"> and model_code = #{modelCode}</if>
+            <if test="type != null  and type != ''"> and type = #{type}</if>
+            <if test="provider != null  and provider != ''"> and provider = #{provider}</if>
+            <if test="apiEndpoint != null  and apiEndpoint != ''"> and api_endpoint = #{apiEndpoint}</if>
+            <if test="accessKeyId != null  and accessKeyId != ''"> and access_key_id = #{accessKeyId}</if>
+            <if test="secretAccessKey != null  and secretAccessKey != ''"> and secret_access_key = #{secretAccessKey}</if>
+            <if test="extraConfig != null  and extraConfig != ''"> and extra_config = #{extraConfig}</if>
+            <if test="billingMode != null  and billingMode != ''"> and billing_mode = #{billingMode}</if>
+            <if test="pointsPerReq != null "> and points_per_req = #{pointsPerReq}</if>
+            <if test="pointsPer1kTokens != null "> and points_per_1k_tokens = #{pointsPer1kTokens}</if>
+            <if test="pointsPerSecond != null "> and points_per_second = #{pointsPerSecond}</if>
+            <if test="costPerReqCny != null "> and cost_per_req_cny = #{costPerReqCny}</if>
+            <if test="costPer1kCny != null "> and cost_per_1k_cny = #{costPer1kCny}</if>
+            <if test="costPerSecondCny != null "> and cost_per_second_cny = #{costPerSecondCny}</if>
+            <if test="isActive != null "> and is_active = #{isActive}</if>
+            <if test="sortOrder != null "> and sort_order = #{sortOrder}</if>
+        </where>
+    </select>
+    
+    <select id="selectAiModelPricingById" parameterType="Long" resultMap="AiModelPricingResult">
+        <include refid="selectAiModelPricingVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertAiModelPricing" parameterType="AiModelPricing" useGeneratedKeys="true" keyProperty="id">
+        insert into sys_ai_models_pricing
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="displayName != null and displayName != ''">display_name,</if>
+            <if test="modelCode != null and modelCode != ''">model_code,</if>
+            <if test="type != null">type,</if>
+            <if test="provider != null">provider,</if>
+            <if test="apiEndpoint != null">api_endpoint,</if>
+            <if test="accessKeyId != null">access_key_id,</if>
+            <if test="secretAccessKey != null">secret_access_key,</if>
+            <if test="extraConfig != null">extra_config,</if>
+            <if test="billingMode != null and billingMode != ''">billing_mode,</if>
+            <if test="pointsPerReq != null">points_per_req,</if>
+            <if test="pointsPer1kTokens != null">points_per_1k_tokens,</if>
+            <if test="pointsPerSecond != null">points_per_second,</if>
+            <if test="costPerReqCny != null">cost_per_req_cny,</if>
+            <if test="costPer1kCny != null">cost_per_1k_cny,</if>
+            <if test="costPerSecondCny != null">cost_per_second_cny,</if>
+            <if test="isActive != null">is_active,</if>
+            <if test="sortOrder != null">sort_order,</if>
+            <if test="createTime != null">create_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="displayName != null and displayName != ''">#{displayName},</if>
+            <if test="modelCode != null and modelCode != ''">#{modelCode},</if>
+            <if test="type != null">#{type},</if>
+            <if test="provider != null">#{provider},</if>
+            <if test="apiEndpoint != null">#{apiEndpoint},</if>
+            <if test="accessKeyId != null">#{accessKeyId},</if>
+            <if test="secretAccessKey != null">#{secretAccessKey},</if>
+            <if test="extraConfig != null">#{extraConfig},</if>
+            <if test="billingMode != null and billingMode != ''">#{billingMode},</if>
+            <if test="pointsPerReq != null">#{pointsPerReq},</if>
+            <if test="pointsPer1kTokens != null">#{pointsPer1kTokens},</if>
+            <if test="pointsPerSecond != null">#{pointsPerSecond},</if>
+            <if test="costPerReqCny != null">#{costPerReqCny},</if>
+            <if test="costPer1kCny != null">#{costPer1kCny},</if>
+            <if test="costPerSecondCny != null">#{costPerSecondCny},</if>
+            <if test="isActive != null">#{isActive},</if>
+            <if test="sortOrder != null">#{sortOrder},</if>
+            <if test="createTime != null">#{createTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateAiModelPricing" parameterType="AiModelPricing">
+        update sys_ai_models_pricing
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="displayName != null and displayName != ''">display_name = #{displayName},</if>
+            <if test="modelCode != null and modelCode != ''">model_code = #{modelCode},</if>
+            <if test="type != null">type = #{type},</if>
+            <if test="provider != null">provider = #{provider},</if>
+            <if test="apiEndpoint != null">api_endpoint = #{apiEndpoint},</if>
+            <if test="accessKeyId != null">access_key_id = #{accessKeyId},</if>
+            <if test="secretAccessKey != null">secret_access_key = #{secretAccessKey},</if>
+            <if test="extraConfig != null">extra_config = #{extraConfig},</if>
+            <if test="billingMode != null and billingMode != ''">billing_mode = #{billingMode},</if>
+            <if test="pointsPerReq != null">points_per_req = #{pointsPerReq},</if>
+            <if test="pointsPer1kTokens != null">points_per_1k_tokens = #{pointsPer1kTokens},</if>
+            <if test="pointsPerSecond != null">points_per_second = #{pointsPerSecond},</if>
+            <if test="costPerReqCny != null">cost_per_req_cny = #{costPerReqCny},</if>
+            <if test="costPer1kCny != null">cost_per_1k_cny = #{costPer1kCny},</if>
+            <if test="costPerSecondCny != null">cost_per_second_cny = #{costPerSecondCny},</if>
+            <if test="isActive != null">is_active = #{isActive},</if>
+            <if test="sortOrder != null">sort_order = #{sortOrder},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteAiModelPricingById" parameterType="Long">
+        delete from sys_ai_models_pricing where id = #{id}
+    </delete>
+
+    <delete id="deleteAiModelPricingByIds" parameterType="String">
+        delete from sys_ai_models_pricing where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>
