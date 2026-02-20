@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper
-PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ruoyi.system.mapper.AiModelPricingMapper">
-    
+
     <resultMap type="AiModelPricing" id="AiModelPricingResult">
         <result property="id"    column="id"    />
         <result property="displayName"    column="display_name"    />
@@ -24,6 +24,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="isActive"    column="is_active"    />
         <result property="sortOrder"    column="sort_order"    />
         <result property="createTime"    column="create_time"    />
+        <result property="totalCalls"    column="total_calls"    />
+        <result property="totalCost"     column="total_cost"    />
     </resultMap>
 
     <sql id="selectAiModelPricingVo">
@@ -31,31 +33,28 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </sql>
 
     <select id="selectAiModelPricingList" parameterType="AiModelPricing" resultMap="AiModelPricingResult">
-        <include refid="selectAiModelPricingVo"/>
-        <where>  
-            <if test="displayName != null  and displayName != ''"> and display_name like concat('%', #{displayName}, '%')</if>
-            <if test="modelCode != null  and modelCode != ''"> and model_code = #{modelCode}</if>
-            <if test="type != null  and type != ''"> and type = #{type}</if>
-            <if test="provider != null  and provider != ''"> and provider = #{provider}</if>
-            <if test="apiEndpoint != null  and apiEndpoint != ''"> and api_endpoint = #{apiEndpoint}</if>
-            <if test="accessKeyId != null  and accessKeyId != ''"> and access_key_id = #{accessKeyId}</if>
-            <if test="secretAccessKey != null  and secretAccessKey != ''"> and secret_access_key = #{secretAccessKey}</if>
-            <if test="extraConfig != null  and extraConfig != ''"> and extra_config = #{extraConfig}</if>
-            <if test="billingMode != null  and billingMode != ''"> and billing_mode = #{billingMode}</if>
-            <if test="pointsPerReq != null "> and points_per_req = #{pointsPerReq}</if>
-            <if test="pointsPer1kTokens != null "> and points_per_1k_tokens = #{pointsPer1kTokens}</if>
-            <if test="pointsPerSecond != null "> and points_per_second = #{pointsPerSecond}</if>
-            <if test="costPerReqCny != null "> and cost_per_req_cny = #{costPerReqCny}</if>
-            <if test="costPer1kCny != null "> and cost_per_1k_cny = #{costPer1kCny}</if>
-            <if test="costPerSecondCny != null "> and cost_per_second_cny = #{costPerSecondCny}</if>
-            <if test="isActive != null "> and is_active = #{isActive}</if>
-            <if test="sortOrder != null "> and sort_order = #{sortOrder}</if>
+        select
+        p.*,
+        (select count(*) from aigc_tasks t where t.used_model_id = p.id and t.status = 2) as total_calls,
+        (select ifnull(sum(t.consumed_credits), 0) from aigc_tasks t where t.used_model_id = p.id and t.status = 2) as total_cost
+        from sys_ai_models_pricing p
+        <where>
+            <if test="displayName != null  and displayName != ''"> and p.display_name like concat('%', #{displayName}, '%')</if>
+            <if test="modelCode != null  and modelCode != ''"> and p.model_code = #{modelCode}</if>
+            <if test="type != null  and type != ''"> and p.type = #{type}</if>
+            <if test="provider != null  and provider != ''"> and p.provider = #{provider}</if>
+            <if test="isActive != null "> and p.is_active = #{isActive}</if>
         </where>
+        order by p.sort_order asc, p.create_time desc
     </select>
-    
+
     <select id="selectAiModelPricingById" parameterType="Long" resultMap="AiModelPricingResult">
-        <include refid="selectAiModelPricingVo"/>
-        where id = #{id}
+        select
+            p.*,
+            (select count(*) from aigc_tasks t where t.used_model_id = p.id and t.status = 2) as total_calls,
+            (select ifnull(sum(t.consumed_credits), 0) from aigc_tasks t where t.used_model_id = p.id and t.status = 2) as total_cost
+        from sys_ai_models_pricing p
+        where p.id = #{id}
     </select>
 
     <insert id="insertAiModelPricing" parameterType="AiModelPricing" useGeneratedKeys="true" keyProperty="id">
@@ -79,7 +78,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="isActive != null">is_active,</if>
             <if test="sortOrder != null">sort_order,</if>
             <if test="createTime != null">create_time,</if>
-         </trim>
+        </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="displayName != null and displayName != ''">#{displayName},</if>
             <if test="modelCode != null and modelCode != ''">#{modelCode},</if>
@@ -99,7 +98,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="isActive != null">#{isActive},</if>
             <if test="sortOrder != null">#{sortOrder},</if>
             <if test="createTime != null">#{createTime},</if>
-         </trim>
+        </trim>
     </insert>
 
     <update id="updateAiModelPricing" parameterType="AiModelPricing">
@@ -132,7 +131,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </delete>
 
     <delete id="deleteAiModelPricingByIds" parameterType="String">
-        delete from sys_ai_models_pricing where id in 
+        delete from sys_ai_models_pricing where id in
         <foreach item="id" collection="array" open="(" separator="," close=")">
             #{id}
         </foreach>

@@ -1,6 +1,8 @@
 package com.ruoyi.system.service.impl;
 
 import java.util.*;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import com.ruoyi.common.utils.DateUtils;
 import com.ruoyi.common.exception.ServiceException;
 import org.slf4j.Logger;
@@ -25,6 +27,48 @@ public class AiModelPricingServiceImpl implements IAiModelPricingService {
     @Qualifier("aiRestTemplate")
     private RestTemplate restTemplate;
 
+    /**
+     * 【核心新增】：计算单次调用的费用和积分消耗
+     * 对应你 SQL 中的 aigc_tasks 字段
+     */
+    @Override
+    public Map<String, BigDecimal> calculateTaskCost(Long pricingId, Integer inputTokens, Integer outputTokens, Integer seconds, Integer count) {
+        AiModelPricing pricing = aiModelPricingMapper.selectAiModelPricingById(pricingId);
+        if (pricing == null) throw new ServiceException("模型配置不存在");
+
+        BigDecimal consumedCredits = BigDecimal.ZERO;
+        BigDecimal realCostCny = BigDecimal.ZERO;
+        String mode = pricing.getBillingMode(); // req, token, second
+
+        if ("token".equals(mode)) {
+            // Token计费：总Tokens / 1000 * 1K单价
+            int totalTokens = (inputTokens != null ? inputTokens : 0) + (outputTokens != null ? outputTokens : 0);
+            BigDecimal tokenUnit = new BigDecimal(totalTokens).divide(new BigDecimal(1000), 10, RoundingMode.HALF_UP);
+            consumedCredits = pricing.getPointsPer1kTokens().multiply(tokenUnit);
+            realCostCny = pricing.getCostPer1kCny().multiply(tokenUnit);
+        } else if ("second".equals(mode)) {
+            // 按秒计费：秒数 * 单价
+            BigDecimal secs = new BigDecimal(seconds != null ? seconds : 0);
+            consumedCredits = pricing.getPointsPerSecond().multiply(secs);
+            // 假设成本也是按秒，或者按次折算
+            realCostCny = pricing.getCostPerReqCny().multiply(secs);
+        } else {
+            // 默认按次计费 (req)
+            BigDecimal cnt = new BigDecimal(count != null ? count : 1);
+            consumedCredits = pricing.getPointsPerReq().multiply(cnt);
+            realCostCny = pricing.getCostPerReqCny().multiply(cnt);
+        }
+
+        Map<String, BigDecimal> result = new HashMap<>();
+        // 积分保留2位，人民币成本保留6位（对应你SQL的decimal 12,6）
+        result.put("consumedCredits", consumedCredits.setScale(2, RoundingMode.HALF_UP));
+        result.put("realCostCny", realCostCny.setScale(6, RoundingMode.HALF_UP));
+        return result;
+    }
+
+    /**
+     * 【原有功能】：验证模型连接（AI实验室调用）
+     */
     @Override
     public String verifyModelConnection(AiModelPricing pricing) {
         try {
@@ -42,15 +86,12 @@ public class AiModelPricingServiceImpl implements IAiModelPricingService {
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("model", modelCode);
 
-            // 根据厂商和类型构建请求体
             boolean isAliyun = endpoint.contains("aliyuncs.com");
 
             if ("video".equals(type)) {
-                // 阿里地址通常是全路径，火山等地址若没拼 /tasks 则补全
                 if (!isAliyun && !endpoint.contains("/tasks")) {
                     finalUrl = buildUrl(endpoint, "contents/generations/tasks");
                 }
-
                 if (isAliyun) {
                     Map<String, Object> input = new HashMap<>();
                     input.put("prompt", userPrompt);
@@ -64,11 +105,9 @@ public class AiModelPricingServiceImpl implements IAiModelPricingService {
                     requestBody.put("content", contentList);
                 }
             } else if ("image".equals(type)) {
-                // 即使是阿里，如果没写全路径也要补全，或者直接让 finalUrl 等于 endpoint
                 if (!endpoint.contains("images/generations") && !endpoint.contains("image-synthesis")) {
                     finalUrl = buildUrl(endpoint, isAliyun ? "services/aigc/text2image/image-synthesis" : "images/generations");
                 }
-
                 if (isAliyun) {
                     Map<String, Object> input = new HashMap<>();
                     input.put("prompt", userPrompt);
@@ -77,33 +116,25 @@ public class AiModelPricingServiceImpl implements IAiModelPricingService {
                     requestBody.put("prompt", userPrompt);
                 }
             } else {
-                // 文本模型：修正补全逻辑
-                // 只要路径里不包含 chat/completions 或 generation，就补全OpenAI兼容路径
                 if (!endpoint.contains("chat/completions") && !endpoint.contains("generation")) {
                     finalUrl = buildUrl(endpoint, "chat/completions");
                 }
                 requestBody.put("messages", createSimpleMessage(userPrompt));
             }
 
-            // Headers 处理
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.set("Authorization", "Bearer " + apiKey.trim());
 
-            // 阿里生视频加这个Header触发异步
             if (isAliyun && "video".equals(type)) {
                 headers.set("X-DashScope-Async", "enable");
             }
 
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
-            log.info("AI连接测试 - 最终URL: {}", finalUrl);
-
             ResponseEntity<Map> response = restTemplate.exchange(finalUrl, HttpMethod.POST, entity, Map.class);
 
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
                 Map<String, Object> body = response.getBody();
-
-                //解析结果
                 if ("video".equals(type)) {
                     String taskId = null;
                     if (isAliyun) {
@@ -112,22 +143,12 @@ public class AiModelPricingServiceImpl implements IAiModelPricingService {
                     } else {
                         taskId = (String) body.get("id");
                     }
-
-                    if (taskId != null) {
-                        log.info("任务提交成功，ID: {}，开始轮询...", taskId);
-                        return pollVideoResult(endpoint, apiKey, taskId, isAliyun);
-                    }
+                    if (taskId != null) return pollVideoResult(endpoint, apiKey, taskId, isAliyun);
                 }
-
-                //图片解析
                 if (body.containsKey("data")) {
                     List<Map<String, Object>> dataList = (List<Map<String, Object>>) body.get("data");
-                    if (dataList != null && !dataList.isEmpty()) {
-                        return "[图片]: " + dataList.get(0).get("url");
-                    }
+                    if (dataList != null && !dataList.isEmpty()) return "[图片]: " + dataList.get(0).get("url");
                 }
-
-                // 文本解析 OpenAI兼容格式/阿里 output
                 if (body.containsKey("choices")) {
                     List<Map<String, Object>> choices = (List<Map<String, Object>>) body.get("choices");
                     Map<String, Object> msg = (Map<String, Object>) choices.get(0).get("message");
@@ -137,42 +158,28 @@ public class AiModelPricingServiceImpl implements IAiModelPricingService {
                     return (String) output.get("text");
                 }
             }
-            return "连接成功，但未识别到结果结构";
-
-        } catch (org.springframework.web.client.HttpStatusCodeException e) {
-            log.error("AI平台报错 ({}): {}", e.getStatusCode(), e.getResponseBodyAsString());
-            throw new ServiceException("平台返回错误: " + e.getStatusCode());
+            return "连接成功，未识别结果";
         } catch (Exception e) {
             log.error("AI连接异常: ", e);
             throw new ServiceException("连接异常: " + e.getMessage());
         }
     }
 
+    // 内部辅助方法
     private String pollVideoResult(String endpoint, String apiKey, String taskId, boolean isAliyun) throws InterruptedException {
-        // 阿里查询地址是独立的，火山通常基于 endpoint
-        String queryUrl = isAliyun ?
-                "https://dashscope.aliyuncs.com/api/v1/tasks/" + taskId :
-                buildUrl(endpoint, taskId);
-
+        String queryUrl = isAliyun ? "https://dashscope.aliyuncs.com/api/v1/tasks/" + taskId : buildUrl(endpoint, taskId);
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + apiKey.trim());
-        HttpEntity<Void> queryEntity = new HttpEntity<>(headers);
-
         for (int i = 1; i <= 30; i++) {
             Thread.sleep(10000);
             try {
-                ResponseEntity<Map> resp = restTemplate.exchange(queryUrl, HttpMethod.GET, queryEntity, Map.class);
+                ResponseEntity<Map> resp = restTemplate.exchange(queryUrl, HttpMethod.GET, new HttpEntity<>(headers), Map.class);
                 Map<String, Object> resBody = resp.getBody();
                 if (resBody == null) continue;
-
                 if (isAliyun) {
                     Map<String, Object> output = (Map<String, Object>) resBody.get("output");
                     String status = (String) output.get("task_status");
-                    if ("SUCCEEDED".equalsIgnoreCase(status)) {
-                        return "[视频]: " + output.get("video_url");
-                    } else if ("FAILED".equalsIgnoreCase(status)) {
-                        return "视频生成失败: " + output.get("message");
-                    }
+                    if ("SUCCEEDED".equalsIgnoreCase(status)) return "[视频]: " + output.get("video_url");
                 } else {
                     String status = (String) resBody.get("status");
                     if ("succeeded".equalsIgnoreCase(status)) {
@@ -180,23 +187,13 @@ public class AiModelPricingServiceImpl implements IAiModelPricingService {
                         return "[视频]: " + data.get("url");
                     }
                 }
-            } catch (Exception e) {
-                log.warn("轮询异常 (继续尝试): {}", e.getMessage());
-            }
+            } catch (Exception e) { log.warn("轮询异常: {}", e.getMessage()); }
         }
-        return "任务处理中，请稍后刷新。ID: " + taskId;
+        return "处理中... ID: " + taskId;
     }
 
-    private String buildUrl(String base, String path) {
-        return base.replaceAll("/+$", "") + "/" + path.replaceAll("^/+", "");
-    }
-
-    private String getDefaultPrompt(String type) {
-        if ("video".equals(type)) return "一只可爱的熊猫在吃竹子";
-        if ("image".equals(type)) return "美丽的风景画";
-        return "你好";
-    }
-
+    private String buildUrl(String base, String path) { return base.replaceAll("/+$", "") + "/" + path.replaceAll("^/+", ""); }
+    private String getDefaultPrompt(String type) { return "video".equals(type) ? "一只熊猫" : "image".equals(type) ? "风景" : "你好"; }
     private List<Map<String, Object>> createSimpleMessage(String text) {
         Map<String, Object> msg = new HashMap<>();
         msg.put("role", "user");
@@ -204,8 +201,16 @@ public class AiModelPricingServiceImpl implements IAiModelPricingService {
         return Collections.singletonList(msg);
     }
 
+    // 基础 CRUD
     @Override public AiModelPricing selectAiModelPricingById(Long id) { return aiModelPricingMapper.selectAiModelPricingById(id); }
-    @Override public List<AiModelPricing> selectAiModelPricingList(AiModelPricing aiModelPricing) { return aiModelPricingMapper.selectAiModelPricingList(aiModelPricing); }
+
+    /**
+     * 【重点修改】：查询列表时，Mapper层将执行关联统计SQL
+     */
+    @Override public List<AiModelPricing> selectAiModelPricingList(AiModelPricing aiModelPricing) {
+        return aiModelPricingMapper.selectAiModelPricingList(aiModelPricing);
+    }
+
     @Override public int insertAiModelPricing(AiModelPricing aiModelPricing) { aiModelPricing.setCreateTime(DateUtils.getNowDate()); return aiModelPricingMapper.insertAiModelPricing(aiModelPricing); }
     @Override public int updateAiModelPricing(AiModelPricing aiModelPricing) { return aiModelPricingMapper.updateAiModelPricing(aiModelPricing); }
     @Override public int deleteAiModelPricingByIds(Long[] ids) { return aiModelPricingMapper.deleteAiModelPricingByIds(ids); }

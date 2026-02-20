@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.aigc.mapper.AigcTasksMapper">
+
+    <resultMap type="AigcTasks" id="AigcTasksResult">
+        <result property="id"    column="id"    />
+        <result property="workspaceId"    column="workspace_id"    />
+        <result property="userId"    column="user_id"    />
+        <result property="taskType"    column="task_type"    />
+        <result property="usedModelId"    column="used_model_id"    />
+        <result property="modelNameSnapshot"    column="model_name_snapshot"    />
+        <result property="providerSnapshot"    column="provider_snapshot"    />
+        <result property="inputContent"    column="input_content"    />
+        <result property="usageTokensInput"    column="usage_tokens_input"    />
+        <result property="usageTokensOutput"    column="usage_tokens_output"    />
+        <result property="outputContent"    column="output_content"    />
+        <result property="usageSeconds"    column="usage_seconds"    />
+        <result property="usageCount"    column="usage_count"    />
+        <result property="consumedCredits"    column="consumed_credits"    />
+        <result property="realCostCny"    column="real_cost_cny"    />
+        <result property="targetTable"    column="target_table"    />
+        <result property="targetId"    column="target_id"    />
+        <result property="status"    column="status"    />
+        <result property="resultFileId"    column="result_file_id"    />
+        <result property="errorMsg"    column="error_msg"    />
+        <result property="durationMs"    column="duration_ms"    />
+        <result property="createTime"    column="create_time"    />
+    </resultMap>
+
+    <sql id="selectAigcTasksVo">
+        select id, workspace_id, user_id, task_type, used_model_id, model_name_snapshot, provider_snapshot, input_content, usage_tokens_input, usage_tokens_output, output_content, usage_seconds, usage_count, consumed_credits, real_cost_cny, target_table, target_id, status, result_file_id, error_msg, duration_ms, create_time from aigc_tasks
+    </sql>
+
+    <select id="selectAigcTasksList" parameterType="AigcTasks" resultMap="AigcTasksResult">
+        <include refid="selectAigcTasksVo"/>
+        <where>
+            <if test="workspaceId != null "> and workspace_id = #{workspaceId}</if>
+            <if test="userId != null "> and user_id = #{userId}</if>
+            <if test="taskType != null  and taskType != ''"> and task_type = #{taskType}</if>
+            <if test="usedModelId != null "> and used_model_id = #{usedModelId}</if>
+            <if test="modelNameSnapshot != null  and modelNameSnapshot != ''"> and model_name_snapshot = #{modelNameSnapshot}</if>
+            <if test="providerSnapshot != null  and providerSnapshot != ''"> and provider_snapshot = #{providerSnapshot}</if>
+            <if test="inputContent != null  and inputContent != ''"> and input_content = #{inputContent}</if>
+            <if test="usageTokensInput != null "> and usage_tokens_input = #{usageTokensInput}</if>
+            <if test="usageTokensOutput != null "> and usage_tokens_output = #{usageTokensOutput}</if>
+            <if test="outputContent != null  and outputContent != ''"> and output_content = #{outputContent}</if>
+            <if test="usageSeconds != null "> and usage_seconds = #{usageSeconds}</if>
+            <if test="usageCount != null "> and usage_count = #{usageCount}</if>
+            <if test="consumedCredits != null "> and consumed_credits = #{consumedCredits}</if>
+            <if test="realCostCny != null "> and real_cost_cny = #{realCostCny}</if>
+            <if test="targetTable != null  and targetTable != ''"> and target_table = #{targetTable}</if>
+            <if test="targetId != null "> and target_id = #{targetId}</if>
+            <if test="status != null "> and status = #{status}</if>
+            <if test="resultFileId != null "> and result_file_id = #{resultFileId}</if>
+            <if test="errorMsg != null  and errorMsg != ''"> and error_msg = #{errorMsg}</if>
+            <if test="durationMs != null "> and duration_ms = #{durationMs}</if>
+        </where>
+    </select>
+
+    <select id="selectAigcTasksById" parameterType="Long" resultMap="AigcTasksResult">
+        <include refid="selectAigcTasksVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertAigcTasks" parameterType="AigcTasks" useGeneratedKeys="true" keyProperty="id">
+        insert into aigc_tasks
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="workspaceId != null">workspace_id,</if>
+            <if test="userId != null">user_id,</if>
+            <if test="taskType != null">task_type,</if>
+            <if test="usedModelId != null">used_model_id,</if>
+            <if test="modelNameSnapshot != null">model_name_snapshot,</if>
+            <if test="providerSnapshot != null">provider_snapshot,</if>
+            <if test="inputContent != null">input_content,</if>
+            <if test="usageTokensInput != null">usage_tokens_input,</if>
+            <if test="usageTokensOutput != null">usage_tokens_output,</if>
+            <if test="outputContent != null">output_content,</if>
+            <if test="usageSeconds != null">usage_seconds,</if>
+            <if test="usageCount != null">usage_count,</if>
+            <if test="consumedCredits != null">consumed_credits,</if>
+            <if test="realCostCny != null">real_cost_cny,</if>
+            <if test="targetTable != null">target_table,</if>
+            <if test="targetId != null">target_id,</if>
+            <if test="status != null">status,</if>
+            <if test="resultFileId != null">result_file_id,</if>
+            <if test="errorMsg != null">error_msg,</if>
+            <if test="durationMs != null">duration_ms,</if>
+            <if test="createTime != null">create_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="workspaceId != null">#{workspaceId},</if>
+            <if test="userId != null">#{userId},</if>
+            <if test="taskType != null">#{taskType},</if>
+            <if test="usedModelId != null">#{usedModelId},</if>
+            <if test="modelNameSnapshot != null">#{modelNameSnapshot},</if>
+            <if test="providerSnapshot != null">#{providerSnapshot},</if>
+            <if test="inputContent != null">#{inputContent},</if>
+            <if test="usageTokensInput != null">#{usageTokensInput},</if>
+            <if test="usageTokensOutput != null">#{usageTokensOutput},</if>
+            <if test="outputContent != null">#{outputContent},</if>
+            <if test="usageSeconds != null">#{usageSeconds},</if>
+            <if test="usageCount != null">#{usageCount},</if>
+            <if test="consumedCredits != null">#{consumedCredits},</if>
+            <if test="realCostCny != null">#{realCostCny},</if>
+            <if test="targetTable != null">#{targetTable},</if>
+            <if test="targetId != null">#{targetId},</if>
+            <if test="status != null">#{status},</if>
+            <if test="resultFileId != null">#{resultFileId},</if>
+            <if test="errorMsg != null">#{errorMsg},</if>
+            <if test="durationMs != null">#{durationMs},</if>
+            <if test="createTime != null">#{createTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateAigcTasks" parameterType="AigcTasks">
+        update aigc_tasks
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="workspaceId != null">workspace_id = #{workspaceId},</if>
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="taskType != null">task_type = #{taskType},</if>
+            <if test="usedModelId != null">used_model_id = #{usedModelId},</if>
+            <if test="modelNameSnapshot != null">model_name_snapshot = #{modelNameSnapshot},</if>
+            <if test="providerSnapshot != null">provider_snapshot = #{providerSnapshot},</if>
+            <if test="inputContent != null">input_content = #{inputContent},</if>
+            <if test="usageTokensInput != null">usage_tokens_input = #{usageTokensInput},</if>
+            <if test="usageTokensOutput != null">usage_tokens_output = #{usageTokensOutput},</if>
+            <if test="outputContent != null">output_content = #{outputContent},</if>
+            <if test="usageSeconds != null">usage_seconds = #{usageSeconds},</if>
+            <if test="usageCount != null">usage_count = #{usageCount},</if>
+            <if test="consumedCredits != null">consumed_credits = #{consumedCredits},</if>
+            <if test="realCostCny != null">real_cost_cny = #{realCostCny},</if>
+            <if test="targetTable != null">target_table = #{targetTable},</if>
+            <if test="targetId != null">target_id = #{targetId},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="resultFileId != null">result_file_id = #{resultFileId},</if>
+            <if test="errorMsg != null">error_msg = #{errorMsg},</if>
+            <if test="durationMs != null">duration_ms = #{durationMs},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteAigcTasksById" parameterType="Long">
+        delete from aigc_tasks where id = #{id}
+    </delete>
+
+    <delete id="deleteAigcTasksByIds" parameterType="String">
+        delete from aigc_tasks where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

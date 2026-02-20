@@ -8,15 +8,14 @@ import com.ruoyi.common.core.domain.BaseEntity;
 
 /**
  * 模型配置宽对象 sys_ai_models_pricing
- * 
- * @author ruoyi
+ * * @author ruoyi
  * @date 2026-02-03
  */
 public class AiModelPricing extends BaseEntity
 {
     private static final long serialVersionUID = 1L;
 
-    /** $column.columnComment */
+    /** ID */
     private Long id;
 
     /** 商品名 */
@@ -36,19 +35,15 @@ public class AiModelPricing extends BaseEntity
     private String provider;
 
     /** API地址 */
-    @Excel(name = "API地址")
     private String apiEndpoint;
 
     /** AK */
-    @Excel(name = "AK")
     private String accessKeyId;
 
     /** SK */
-    @Excel(name = "SK")
     private String secretAccessKey;
 
     /** 扩展配置 */
-    @Excel(name = "扩展配置")
     private String extraConfig;
 
     /** 计费模式 */
@@ -68,227 +63,244 @@ public class AiModelPricing extends BaseEntity
     private BigDecimal pointsPerSecond;
 
     /** 成本:单次 */
-    @Excel(name = "成本:单次")
     private BigDecimal costPerReqCny;
 
     /** 成本:Token */
-    @Excel(name = "成本:Token")
     private BigDecimal costPer1kCny;
 
     /** 成本:每秒 */
-    @Excel(name = "成本:每秒")
     private BigDecimal costPerSecondCny;
 
     /** 上架状态 */
-    @Excel(name = "上架状态")
+    @Excel(name = "上架状态", readConverterExp = "0=下架,1=上架")
     private Integer isActive;
 
     /** 排序 */
-    @Excel(name = "排序")
     private Long sortOrder;
 
-    public void setId(Long id) 
+    /** 【核心新增】累计调用次数 (由Mapper子查询注入) */
+    @Excel(name = "累计调用次数")
+    private Long totalCalls;
+
+    /** 【核心新增】累计消耗积分 (由Mapper子查询注入) */
+    @Excel(name = "累计消耗积分")
+    private BigDecimal totalCost;
+
+    public void setId(Long id)
     {
         this.id = id;
     }
 
-    public Long getId() 
+    public Long getId()
     {
         return id;
     }
 
-    public void setDisplayName(String displayName) 
+    public void setDisplayName(String displayName)
     {
         this.displayName = displayName;
     }
 
-    public String getDisplayName() 
+    public String getDisplayName()
     {
         return displayName;
     }
 
-    public void setModelCode(String modelCode) 
+    public void setModelCode(String modelCode)
     {
         this.modelCode = modelCode;
     }
 
-    public String getModelCode() 
+    public String getModelCode()
     {
         return modelCode;
     }
 
-    public void setType(String type) 
+    public void setType(String type)
     {
         this.type = type;
     }
 
-    public String getType() 
+    public String getType()
     {
         return type;
     }
 
-    public void setProvider(String provider) 
+    public void setProvider(String provider)
     {
         this.provider = provider;
     }
 
-    public String getProvider() 
+    public String getProvider()
     {
         return provider;
     }
 
-    public void setApiEndpoint(String apiEndpoint) 
+    public void setApiEndpoint(String apiEndpoint)
     {
         this.apiEndpoint = apiEndpoint;
     }
 
-    public String getApiEndpoint() 
+    public String getApiEndpoint()
     {
         return apiEndpoint;
     }
 
-    public void setAccessKeyId(String accessKeyId) 
+    public void setAccessKeyId(String accessKeyId)
     {
         this.accessKeyId = accessKeyId;
     }
 
-    public String getAccessKeyId() 
+    public String getAccessKeyId()
     {
         return accessKeyId;
     }
 
-    public void setSecretAccessKey(String secretAccessKey) 
+    public void setSecretAccessKey(String secretAccessKey)
     {
         this.secretAccessKey = secretAccessKey;
     }
 
-    public String getSecretAccessKey() 
+    public String getSecretAccessKey()
     {
         return secretAccessKey;
     }
 
-    public void setExtraConfig(String extraConfig) 
+    public void setExtraConfig(String extraConfig)
     {
         this.extraConfig = extraConfig;
     }
 
-    public String getExtraConfig() 
+    public String getExtraConfig()
     {
         return extraConfig;
     }
 
-    public void setBillingMode(String billingMode) 
+    public void setBillingMode(String billingMode)
     {
         this.billingMode = billingMode;
     }
 
-    public String getBillingMode() 
+    public String getBillingMode()
     {
         return billingMode;
     }
 
-    public void setPointsPerReq(BigDecimal pointsPerReq) 
+    public void setPointsPerReq(BigDecimal pointsPerReq)
     {
         this.pointsPerReq = pointsPerReq;
     }
 
-    public BigDecimal getPointsPerReq() 
+    public BigDecimal getPointsPerReq()
     {
         return pointsPerReq;
     }
 
-    public void setPointsPer1kTokens(BigDecimal pointsPer1kTokens) 
+    public void setPointsPer1kTokens(BigDecimal pointsPer1kTokens)
     {
         this.pointsPer1kTokens = pointsPer1kTokens;
     }
 
-    public BigDecimal getPointsPer1kTokens() 
+    public BigDecimal getPointsPer1kTokens()
     {
         return pointsPer1kTokens;
     }
 
-    public void setPointsPerSecond(BigDecimal pointsPerSecond) 
+    public void setPointsPerSecond(BigDecimal pointsPerSecond)
     {
         this.pointsPerSecond = pointsPerSecond;
     }
 
-    public BigDecimal getPointsPerSecond() 
+    public BigDecimal getPointsPerSecond()
     {
         return pointsPerSecond;
     }
 
-    public void setCostPerReqCny(BigDecimal costPerReqCny) 
+    public void setCostPerReqCny(BigDecimal costPerReqCny)
     {
         this.costPerReqCny = costPerReqCny;
     }
 
-    public BigDecimal getCostPerReqCny() 
+    public BigDecimal getCostPerReqCny()
     {
         return costPerReqCny;
     }
 
-    public void setCostPer1kCny(BigDecimal costPer1kCny) 
+    public void setCostPer1kCny(BigDecimal costPer1kCny)
     {
         this.costPer1kCny = costPer1kCny;
     }
 
-    public BigDecimal getCostPer1kCny() 
+    public BigDecimal getCostPer1kCny()
     {
         return costPer1kCny;
     }
 
-    public void setCostPerSecondCny(BigDecimal costPerSecondCny) 
+    public void setCostPerSecondCny(BigDecimal costPerSecondCny)
     {
         this.costPerSecondCny = costPerSecondCny;
     }
 
-    public BigDecimal getCostPerSecondCny() 
+    public BigDecimal getCostPerSecondCny()
     {
         return costPerSecondCny;
     }
 
-    public void setIsActive(Integer isActive) 
+    public void setIsActive(Integer isActive)
     {
         this.isActive = isActive;
     }
 
-    public Integer getIsActive() 
+    public Integer getIsActive()
     {
         return isActive;
     }
 
-    public void setSortOrder(Long sortOrder) 
+    public void setSortOrder(Long sortOrder)
     {
         this.sortOrder = sortOrder;
     }
 
-    public Long getSortOrder() 
+    public Long getSortOrder()
     {
         return sortOrder;
+    }
+
+    // --- 新增统计字段的 Getter 和 Setter (MyBatis 映射必须) ---
+
+    public void setTotalCalls(Long totalCalls)
+    {
+        this.totalCalls = totalCalls;
+    }
+
+    public Long getTotalCalls()
+    {
+        return totalCalls;
+    }
+
+    public void setTotalCost(BigDecimal totalCost)
+    {
+        this.totalCost = totalCost;
+    }
+
+    public BigDecimal getTotalCost()
+    {
+        return totalCost;
     }
 
     @Override
     public String toString() {
         return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
-            .append("id", getId())
-            .append("displayName", getDisplayName())
-            .append("modelCode", getModelCode())
-            .append("type", getType())
-            .append("provider", getProvider())
-            .append("apiEndpoint", getApiEndpoint())
-            .append("accessKeyId", getAccessKeyId())
-            .append("secretAccessKey", getSecretAccessKey())
-            .append("extraConfig", getExtraConfig())
-            .append("billingMode", getBillingMode())
-            .append("pointsPerReq", getPointsPerReq())
-            .append("pointsPer1kTokens", getPointsPer1kTokens())
-            .append("pointsPerSecond", getPointsPerSecond())
-            .append("costPerReqCny", getCostPerReqCny())
-            .append("costPer1kCny", getCostPer1kCny())
-            .append("costPerSecondCny", getCostPerSecondCny())
-            .append("isActive", getIsActive())
-            .append("sortOrder", getSortOrder())
-            .append("createTime", getCreateTime())
-            .toString();
+                .append("id", getId())
+                .append("displayName", getDisplayName())
+                .append("modelCode", getModelCode())
+                .append("type", getType())
+                .append("provider", getProvider())
+                .append("totalCalls", getTotalCalls())
+                .append("totalCost", getTotalCost())
+                .append("billingMode", getBillingMode())
+                .append("isActive", getIsActive())
+                .append("createTime", getCreateTime())
+                .toString();
     }
 }
