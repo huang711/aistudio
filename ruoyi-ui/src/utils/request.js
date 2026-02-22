@@ -17,7 +17,7 @@ const service = axios.create({
   // axios中请求配置有baseURL选项，表示请求URL公共部分
   baseURL: process.env.VUE_APP_BASE_API,
   // 超时
-  timeout: 10000
+  timeout: 120000
 })
 
 // request拦截器
@@ -29,9 +29,9 @@ service.interceptors.request.use(config => {
   // 间隔时间(ms)，小于此时间视为重复提交
   const interval = (config.headers || {}).interval || 1000
   if (getToken() && !isToken) {
-    config.headers['Authorization'] = 'Bearer ' + getToken() // 让每个请求携带自定义token 请根据实际情况自行修改
+    config.headers['Authorization'] = 'Bearer ' + getToken() // 让每个请求携带自定义token
   }
-  
+
   // 工作空间上下文
   const workspaceId = localStorage.getItem('workspaceId')
   if (workspaceId && !config.headers['X-Workspace-Id']) {
@@ -45,12 +45,26 @@ service.interceptors.request.use(config => {
     config.params = {}
     config.url = url
   }
+
+  // 【核心修正部分】：处理 POST/PUT 请求中的 FormData
   if (!isRepeatSubmit && (config.method === 'post' || config.method === 'put')) {
+    // 1. 判断是否为上传文件的 FormData 对象
+    const isFormData = config.data instanceof FormData;
+
     const requestObj = {
       url: config.url,
-      data: typeof config.data === 'object' ? JSON.stringify(config.data) : config.data,
+      // 2. 如果是 FormData，直接透传原对象；如果是普通对象，才转 JSON 字符串
+      // 严禁对 FormData 执行 JSON.stringify，否则文件流会丢失并变成 "{}"
+      data: (typeof config.data === 'object' && !isFormData) ? JSON.stringify(config.data) : config.data,
       time: new Date().getTime()
     }
+
+    // 3. 如果是上传文件，跳过防重复提交校验
+    // 因为：1. 文件流无法序列化  2. 文件通常很大，stringify 会导致浏览器卡死
+    if (isFormData) {
+      return config
+    }
+
     const requestSize = Object.keys(JSON.stringify(requestObj)).length // 请求数据大小
     const limitSize = 5 * 1024 * 1024 // 限制存放数据5M
     if (requestSize >= limitSize) {
@@ -73,6 +87,7 @@ service.interceptors.request.use(config => {
       }
     }
   }
+
   return config
 }, error => {
     console.log(error)

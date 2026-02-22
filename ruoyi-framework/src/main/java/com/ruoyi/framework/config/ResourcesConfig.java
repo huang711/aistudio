@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.CacheControl;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
@@ -17,9 +19,8 @@ import com.ruoyi.framework.interceptor.RepeatSubmitInterceptor;
 import com.ruoyi.framework.interceptor.WorkspaceInterceptor;
 
 /**
- * 通用配置
- * 
- * @author ruoyi
+ * 通用配置 - 包含静态资源映射、拦截器、跨域以及远程调用配置
+ * * @author ruoyi
  */
 @Configuration
 public class ResourcesConfig implements WebMvcConfigurer
@@ -73,5 +74,19 @@ public class ResourcesConfig implements WebMvcConfigurer
         source.registerCorsConfiguration("/**", config);
         // 返回新的CorsFilter
         return new CorsFilter(source);
+    }
+
+    /**
+     * 专门为 AI 模型调用配置的 RestTemplate
+     * 解决生视频等长耗时接口的 Read Timeout 问题
+     */
+    @Bean("aiRestTemplate")
+    public RestTemplate aiRestTemplate() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        // 连接超时：10秒
+        factory.setConnectTimeout(10000);
+        // 读取超时：300秒 (5分钟)，确保视频生成不中断
+        factory.setReadTimeout(600000);
+        return new RestTemplate(factory);
     }
 }

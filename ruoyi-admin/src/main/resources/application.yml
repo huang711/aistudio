@@ -23,6 +23,10 @@ server:
   tomcat:
     # tomcat的URI编码
     uri-encoding: UTF-8
+    # 【关键修改】连接超时时间，针对长文本生成设为 180000 毫秒 (3分钟)
+    connection-timeout: 180000
+    # 【新增】允许在连接上等待处理的最长时间
+    keep-alive-timeout: 180000
     # 连接数满后的排队数，默认为100
     accept-count: 1000
     threads:
@@ -47,6 +51,10 @@ user:
 
 # Spring配置
 spring:
+  # 【新增】针对 Spring MVC 异步处理的超时设置，防止长耗时请求被强制中断
+  mvc:
+    async:
+      request-timeout: 180000
   # 资源信息
   messages:
     # 国际化资源文件路径
@@ -134,3 +142,16 @@ xss:
   excludes: /system/notice
   # 匹配链接
   urlPatterns: /system/*,/monitor/*,/tool/*
+  # 阿里云 OSS 真实开发配置
+aliyun:
+  oss:
+      # 你的 Endpoint：在 OSS 控制台概览页可以看到，如果是深圳，通常是 oss-cn-shenzhen.aliyuncs.com
+      endpoint: oss-cn-shenzhen.aliyuncs.com
+      # 刚才创建的 AccessKey ID
+      accessKeyId: LTAI5tQjZh4hofwPnepUALgZ
+      # 刚才创建的 AccessKey Secret
+      accessKeySecret: Q7dOuPOFUDiwyhiuVNjIxZQK4AIjJk
+      # 填写你创建的 Bucket 名称
+      bucketName: my-ai-assets
+      # 用于前端访问的域名：https://Bucket名.Endpoint
+      domain: https://my-ai-assets.oss-cn-shenzhen.aliyuncs.com

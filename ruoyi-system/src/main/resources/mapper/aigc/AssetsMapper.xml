@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.aigc.mapper.AssetsMapper">
+
+    <resultMap type="Assets" id="AssetsResult">
+        <result property="id" column="id" />
+        <result property="workspaceId" column="workspace_id" />
+        <result property="type" column="type" />
+        <result property="name" column="name" />
+        <result property="description" column="description" />
+        <result property="coverFileId" column="cover_file_id" />
+        <result property="createTime" column="create_time" />
+        <result property="url" column="cdn_url" />
+    </resultMap>
+
+    <select id="selectAssetsList" parameterType="Assets" resultMap="AssetsResult">
+        select
+        a.id, a.workspace_id, a.type, a.name, a.description, a.cover_file_id, a.create_time,
+        f.cdn_url
+        from assets a
+        left join storage_files f on a.cover_file_id = f.id
+        <where>
+            <if test="workspaceId != null"> and a.workspace_id = #{workspaceId}</if>
+            <if test="type != null and type != ''"> and a.type = #{type}</if>
+            <if test="name != null and name != ''"> and a.name like concat('%', #{name}, '%')</if>
+        </where>
+        order by a.create_time desc
+    </select>
+
+    <select id="selectAssetsById" parameterType="Long" resultMap="AssetsResult">
+        select
+            a.id, a.workspace_id, a.type, a.name, a.description, a.cover_file_id, a.create_time,
+            f.cdn_url
+        from assets a
+                 left join storage_files f on a.cover_file_id = f.id
+        where a.id = #{id}
+    </select>
+
+    <insert id="insertAssets" parameterType="Assets" useGeneratedKeys="true" keyProperty="id">
+        insert into assets
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="workspaceId != null">workspace_id,</if>
+            <if test="type != null and type != ''">type,</if>
+            <if test="name != null and name != ''">name,</if>
+            <if test="description != null and description != ''">description,</if>
+            <if test="coverFileId != null">cover_file_id,</if>
+            create_time
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="workspaceId != null">#{workspaceId},</if>
+            <if test="type != null and type != ''">#{type},</if>
+            <if test="name != null and name != ''">#{name},</if>
+            <if test="description != null and description != ''">#{description},</if>
+            <if test="coverFileId != null">#{coverFileId},</if>
+            sysdate()
+        </trim>
+    </insert>
+
+    <update id="updateAssets" parameterType="Assets">
+        update assets
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="workspaceId != null">workspace_id = #{workspaceId},</if>
+            <if test="type != null and type != ''">type = #{type},</if>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="coverFileId != null">cover_file_id = #{coverFileId},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteAssetsByIds" parameterType="Long">
+        delete from assets where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <delete id="deleteAssetsById" parameterType="Long">
+        delete from assets where id = #{id}
+    </delete>
+
+</mapper>

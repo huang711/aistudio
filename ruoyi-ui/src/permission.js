@@ -34,7 +34,7 @@ router.beforeEach((to, from, next) => {
           store.dispatch('GenerateRoutes').then(accessRoutes => {
             // 根据roles权限生成可访问的路由表
             router.addRoutes(accessRoutes) // 动态添加可访问路由表
-            
+
             // 如果是普通用户且访问首页，重定向到工作台
             if (!store.getters.roles.includes('admin') && (to.path === '/' || to.path === '/index')) {
               next({ path: '/studio/dashboard', replace: true })

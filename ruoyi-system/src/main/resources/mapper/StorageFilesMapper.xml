@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.aigc.mapper.StorageFilesMapper">
+
+    <resultMap type="StorageFiles" id="StorageFilesResult">
+        <result property="id" column="id" />
+        <result property="fileKey" column="file_key" />
+        <result property="cdnUrl" column="cdn_url" />
+        <result property="sizeBytes" column="size_bytes" />
+        <result property="mimeType" column="mime_type" />
+        <result property="workspaceId" column="workspace_id" />
+        <result property="uploaderId" column="uploader_id" />
+        <result property="createTime" column="create_time" />
+    </resultMap>
+
+    <sql id="selectStorageFilesVo">
+        select id, file_key, cdn_url, size_bytes, mime_type, workspace_id, uploader_id, create_time
+        from storage_files
+    </sql>
+
+    <insert id="insertStorageFiles" parameterType="StorageFiles" useGeneratedKeys="true" keyProperty="id">
+        insert into storage_files (
+            file_key, cdn_url, size_bytes, mime_type, workspace_id, uploader_id, create_time
+        )
+        values (
+                   #{fileKey}, #{cdnUrl}, #{sizeBytes}, #{mimeType}, #{workspaceId}, #{uploaderId}, sysdate()
+               )
+    </insert>
+
+    <select id="selectStorageFilesById" parameterType="Long" resultMap="StorageFilesResult">
+        <include refid="selectStorageFilesVo"/>
+        where id = #{id}
+    </select>
+
+    <delete id="deleteStorageFilesById" parameterType="Long">
+        delete from storage_files where id = #{id}
+    </delete>
+
+</mapper>
