@@ -67,11 +67,7 @@
             <artifactId>ruoyi-workspace</artifactId>
         </dependency>
 
-<!--        资产与存储模块-->
-        <dependency>
-            <groupId>com.ruoyi</groupId>
-            <artifactId>ruoyi-assets</artifactId>
-        </dependency>
+
 
 <!--        剧本与创作模块-->
         <dependency>
